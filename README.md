@@ -1,27 +1,74 @@
-# PrintLink 🖨️
+# 🖨️ PrintLink - Online Printing Platform
 
-PrintLink is a comprehensive, modern web platform designed to bridge the gap between users and local print shops. Our solution provides a seamless, end-to-end digital experience for uploading documents, configuring print requirements, and managing orders.
+[![Website](https://img.shields.io/badge/Live%20Site-View%20Now-brightgreen)](https://theprintlink.netlify.app)
 
-## 🌟 Core Features
+**PrintLink** is a web application that connects users to nearby print shops.
+It allows customers to upload documents, configure print settings, and track orders in a simple and convenient way.
 
-*   **Secure Authentication**: Robust user management and role-based access control powered by Firebase Authentication.
-*   **Intuitive Shop Discovery**: Effortlessly locate and select trusted local print providers.
-*   **Advanced Document Configuration**: Flexible tools to upload, preview, and configure document print settings.
-*   **Efficient Order Workflow**: Real-time order tracking and streamlined communication between customers and shop owners.
-*   **Comprehensive Admin Dashboard**: Powerful administrative tools for platform monitoring and management.
-*   **Mobile-First Design**: A responsive, touch-optimized user interface for printing needs on the move.
+---
 
-## 🛠 Tech Stack
+## 🌟 Features
 
-PrintLink is built with a modern, high-performance web stack:
+* User authentication (Google / Email)
+* Browse nearby print shops
+* Upload documents (PDF, etc.)
+* Configure print settings (copies, color, paper size)
+* Submit and track print orders
+* Shop owner dashboard for managing orders
+* Admin panel for monitoring the system
 
-*   **Frontend**: React (TypeScript), Tailwind CSS, Vite, Lucide React, Framer Motion
-*   **Backend & Data**: Firebase (Firestore, Authentication, Storage)
+---
 
-## 🤝 Contributing
+## 📸 Screenshots
 
-We welcome contributions of all kinds! Whether it's adding new features, improving documentation, or reporting bugs, please feel free to open an issue or submit a pull request.
+### 👤 User Interface
+
+![User UI](screenshots/user-ui.png)
+
+### 🏪 Shop Owner Interface
+
+![Shop Owner UI](screenshots/shop-owner-ui.png)
+
+### 🛠️ Admin Dashboard
+
+![Admin UI](screenshots/admin-ui.png)
+
+---
+
+## 🚀 Live Demo
+
+🔗 https://theprintlink.netlify.app
+
+✨ Deployed using Netlify
+
+---
+
+## 🛠 Technologies Used
+
+* HTML
+* CSS
+* JavaScript
+* Google Authentication
+* Netlify
+
+---
+
+## 📂 Installation (Optional)
+
+1. Clone the repo:
+
+   ```bash
+   git clone https://github.com/your-username/printlink.git
+   ```
+
+2. Open the project:
+
+   ```
+   index.html
+   ```
+
+---
 
 ## 📜 License
 
-This project is licensed under the MIT License.
+This project is for educational and portfolio purposes.
