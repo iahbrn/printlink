@@ -1,0 +1,70 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "shop_owner"] }
+      },
+      "required": ["uid", "email"]
+    },
+    "Shop": {
+      "title": "Shop",
+      "description": "Print shop details",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "address": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "isOpen": { "type": "boolean" },
+        "pricePerPage": { "type": "number" },
+        "contactNumber": { "type": "string" }
+      },
+      "required": ["name", "latitude", "longitude", "isOpen", "pricePerPage"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Print order details",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "shopId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "ready", "completed", "cancelled"] },
+        "totalAmount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "paymentMethod": { "type": "string", "enum": ["GCash", "Maya", "Cash"] },
+        "config": {
+          "type": "object",
+          "properties": {
+            "fileName": { "type": "string" },
+            "fileUrl": { "type": "string" },
+            "copies": { "type": "number" },
+            "colorMode": { "type": "string", "enum": ["color", "grayscale"] },
+            "paperSize": { "type": "string", "enum": ["A4", "Letter", "Legal"] }
+          }
+        }
+      },
+      "required": ["userId", "shopId", "status", "totalAmount", "createdAt", "config"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/shops/{shopId}": {
+      "schema": "Shop",
+      "description": "Registry of local print shops"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Customer print orders"
+    }
+  }
+}

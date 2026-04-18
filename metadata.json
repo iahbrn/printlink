@@ -1,0 +1,8 @@
+{
+  "name": "PrinkLink. ",
+  "description": "A digital bridge connecting users with local print shops for seamless document uploading, configuration, and ordering.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": []
+}

@@ -1,0 +1,149 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // DEFAULT DENY
+    // ===============================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && 
+        (
+          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+          (request.auth.token.email in ["dyalahberania8@gmail.com", "aubreydnilabelan@gmail.com"] && (request.auth.token.email_verified == true || !('email_verified' in request.auth.token)))
+        );
+    }
+
+    function isShopOwnerOf(shopId) {
+      return isSignedIn() && 
+             exists(/databases/$(database)/documents/shops/$(shopId)) && 
+             get(/databases/$(database)/documents/shops/$(shopId)).data.ownerId == request.auth.uid;
+    }
+
+    function isShopOwner(shopData) {
+      return isSignedIn() && shopData.ownerId == request.auth.uid;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // ===============================================================
+    // Validation Blueprints
+    // ===============================================================
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email']) &&
+             data.keys().size() >= 2 && data.keys().size() <= 12 &&
+             (data.uid == request.auth.uid || isAdmin()) &&
+             data.email is string && data.email.size() <= 200 &&
+             (!('role' in data) || data.role in ['user', 'shop_owner', 'admin']) &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100));
+    }
+
+    function isValidShop(data) {
+      return data.get('name', '') is string && data.get('name', '').size() <= 100 &&
+             data.get('latitude', 0) is number &&
+             data.get('longitude', 0) is number &&
+             data.get('isOpen', true) is bool &&
+             data.get('ownerId', '') is string &&
+             data.get('pricePerPage', 0) is number && data.get('pricePerPage', 0) >= 0;
+    }
+
+    function isValidShopCreation(data) {
+      return data.keys().hasAll(['name', 'latitude', 'longitude', 'isOpen', 'pricePerPage', 'ownerId']) &&
+             isValidShop(data);
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll(['userId', 'shopId', 'shopName', 'status', 'totalAmount', 'createdAt', 'paymentMethod', 'config']) &&
+             data.userId == request.auth.uid &&
+             data.shopId is string &&
+             data.shopName is string && data.shopName.size() <= 200 &&
+             data.status in ['pending', 'ready', 'completed', 'cancelled'] &&
+             data.totalAmount is number &&
+             data.createdAt == request.time &&
+             data.paymentMethod in ['GCash', 'Maya', 'Cash'] &&
+             data.config is map &&
+             data.config.keys().hasAll(['copies', 'colorMode', 'paperSize', 'documents']) &&
+             data.config.copies is number && data.config.copies > 0 &&
+             data.config.colorMode in ['color', 'grayscale'] &&
+             data.config.paperSize in ['A4', 'Letter', 'Legal'] &&
+             data.config.documents is list;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    // Allow public read for connectivity health checks
+    match /connection_test/{ping} {
+      allow read: if true;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      // Admins and the owner themselves can create profile
+      allow create: if (isOwner(userId) || isAdmin()) && isValidUser(incoming()) && (incoming().get('role', 'user') != 'admin' || isAdmin());
+      allow update: if (isOwner(userId) || isAdmin()) && isValidUser(incoming()) && (
+        (incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'email', 'updatedAt', 'contactNumber', 'msgNotifications', 'emailNotifications'])) ||
+        isAdmin()
+      );
+    }
+
+    match /shops/{shopId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidShopCreation(incoming());
+      allow update: if (isAdmin() || isShopOwner(existing())) && isValidShop(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isShopOwnerOf(resource.data.shopId) || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isShopOwnerOf(resource.data.shopId) || isAdmin());
+      
+      allow create: if isSignedIn() && isValidOrder(incoming()) && exists(/databases/$(database)/documents/shops/$(incoming().shopId));
+      
+      allow update: if isSignedIn() && (
+        // User can cancel their own pending order
+        (isOwner(existing().userId) && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']) && 
+         incoming().status == 'cancelled' && 
+         existing().status == 'pending' &&
+         incoming().updatedAt == request.time) ||
+        // Shop owner can update status
+        (isShopOwnerOf(existing().shopId) && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt', 'totalAmount']) && 
+         incoming().updatedAt == request.time) ||
+        // Admin can update everything
+        isAdmin()
+      );
+      
+      allow delete: if isAdmin();
+    }
+  }
+}
